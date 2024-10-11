@@ -94,14 +94,15 @@ def get_last_scan_info():
             time_difference = current_date - last_scan_date
 
             if time_difference.days > 7:
+                print(f"Last scan was more than 7 days ago.")
+                print(f"Last scan: {last_scan_date.strftime('%d.%m.%Y %H:%M:%S')}")
+                print(f"Days since last scan: {time_difference.days}")
                 sys.exit(2)
             else:
-                print(f"Last scan: {creation_date}")
+                print(f"Last scan: {last_scan_date.strftime('%d.%m.%Y %H:%M:%S')}")
                 print(f"Scanned: {scanned}")
                 print(f"Infected: {infected}")
                 print(f"Suspicious: {suspicious}")
-            if time_difference.days > 7:
-                sys.exit(2)
         else:
             print("No scan summary information found.")
             sys.exit(1)
