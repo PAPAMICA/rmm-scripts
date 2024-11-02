@@ -1,0 +1,8 @@
+[MainWP]
+API_URL = https://url/wp-json/mainwp/v1
+CONSUMER_KEY = ck_
+CONSUMER_SECRET = cs_
+
+[InfluxDB]
+URL = http://localhost:8086
+DB = mainwp_data

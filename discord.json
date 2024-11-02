@@ -1,52 +1,52 @@
 {
-    "content": "⚠️ {{alert.get_result}}",
-    "username": "{{agent.hostname}}",
-    "avatar_url": "https://cdn3.emoji.gg/emojis/PogChamp.png",
-    "embeds": [
+  "content": "⚠️ {{alert.get_result}}",
+  "username": "{{agent.hostname}}",
+  "avatar_url": "https://cdn3.emoji.gg/emojis/PogChamp.png",
+  "embeds": [
+    {
+      "title": "🖥️ **Problème détecté sur l'agent {{agent.hostname}}**",
+      "description": "{{alert.message}} ",
+      "color": 16711680,
+      "fields": [
         {
-            "title": "🖥️ **Problème détecté sur l'agent {{agent.hostname}}**",
-            "description": "{{alert.message}} ",
-            "color": 16711680,
-            "fields": [
-                {
-                    "name": "Type d'alerte",
-                    "value": "{{alert.alert_type}}",
-                    "inline": true
-                },
-                {
-                    "name": "Gravité",
-                    "value": "{{alert.severity}}",
-                    "inline": true
-                },
-                {
-                    "name": "Système d'exploitation",
-                    "value": "{{agent.operating_system}}",
-                    "inline": true
-                },
-                {
-                    "name": "Dernière connexion",
-                    "value": "{{agent.last_seen}}",
-                    "inline": true
-                },
-                {
-                    "name": "IP",
-                    "value": "{{agent.local_ips}}",
-                    "inline": true
-                },
-                {
-                    "name": "Utilisateur connecté",
-                    "value": "{{agent.logged_in_username}}",
-                    "inline": true
-                },
-                {
-                    "name": "Description de l'agent",
-                    "value": "{{agent.description}}",
-                    "inline": false
-                }
-            ],
-            "footer": {
-                "text": "Alerte générée le {{alert.alert_time}}"
-            }
+          "name": "Type d'alerte",
+          "value": "{{alert.alert_type}}",
+          "inline": true
+        },
+        {
+          "name": "Gravité",
+          "value": "{{alert.severity}}",
+          "inline": true
+        },
+        {
+          "name": "Système d'exploitation",
+          "value": "{{agent.operating_system}}",
+          "inline": true
+        },
+        {
+          "name": "Dernière connexion",
+          "value": "{{agent.last_seen}}",
+          "inline": true
+        },
+        {
+          "name": "IP",
+          "value": "{{agent.local_ips}}",
+          "inline": true
+        },
+        {
+          "name": "Utilisateur connecté",
+          "value": "{{agent.logged_in_username}}",
+          "inline": true
+        },
+        {
+          "name": "Description de l'agent",
+          "value": "{{agent.description}}",
+          "inline": false
         }
-    ]
+      ],
+      "footer": {
+        "text": "Alerte générée le {{alert.alert_time}}"
+      }
+    }
+  ]
 }

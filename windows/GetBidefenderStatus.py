@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 
+import json
+import locale
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
-import json
-from pathlib import Path
 from datetime import datetime
-import locale
+from pathlib import Path
+
 
 def check_bitdefender_installed():
     # Check via PowerShell if Bitdefender is installed and activated
     cmd = (
         'powershell -Command "Get-WmiObject -Namespace root\\SecurityCenter2 -Class AntiVirusProduct '
-        '| Where-Object { $_.displayName -like \'*Bitdefender*\' } | Select-Object displayName,productState | ConvertTo-Json"'
+        "| Where-Object { $_.displayName -like '*Bitdefender*' } | Select-Object displayName,productState | ConvertTo-Json\""
     )
-    result = subprocess.run(cmd, capture_output=True, text=True, shell=True, encoding='utf-8')
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
 
     if result.returncode != 0:
         print("Error while checking Bitdefender.")
@@ -33,7 +34,7 @@ def check_bitdefender_installed():
         sys.exit(1)
 
     # Check Bitdefender status
-    product_state = int(antivirus_info.get('productState', 0))
+    product_state = int(antivirus_info.get("productState", 0))
     if product_state & 0x1000:  # Bitdefender is activated
         return True
     else:
@@ -52,7 +53,7 @@ def get_last_scan_info():
 
     # Recursive search for the most recent XML scan file
     try:
-        xml_files = list(log_dir.rglob('*.xml'))
+        xml_files = list(log_dir.rglob("*.xml"))
         if not xml_files:
             print("No scan file found.")
             sys.exit(1)
@@ -69,32 +70,54 @@ def get_last_scan_info():
         root = tree.getroot()
 
         # Extract scan information
-        creation_date = root.attrib.get('creationDate', 'Not available')
-        scan_summary = root.find('ScanSummary')
+        creation_date = root.attrib.get("creationDate", "Not available")
+        scan_summary = root.find("ScanSummary")
         if scan_summary is not None:
-            scanned = scan_summary.find('.//TypeSummary[@type="0"]').attrib.get('scanned', '0')
-            infected = scan_summary.find('.//TypeSummary[@type="0"]').attrib.get('infected', '0')
-            suspicious = scan_summary.find('.//TypeSummary[@type="0"]').attrib.get('suspicious', '0')
+            scanned = scan_summary.find('.//TypeSummary[@type="0"]').attrib.get(
+                "scanned", "0"
+            )
+            infected = scan_summary.find('.//TypeSummary[@type="0"]').attrib.get(
+                "infected", "0"
+            )
+            suspicious = scan_summary.find('.//TypeSummary[@type="0"]').attrib.get(
+                "suspicious", "0"
+            )
 
             try:
                 last_scan_date = datetime.strptime(creation_date, "%Y-%m-%d %H:%M:%S")
             except ValueError:
                 try:
-                    last_scan_date = datetime.strptime(creation_date, "%A %d %B %Y %H:%M:%S")
+                    last_scan_date = datetime.strptime(
+                        creation_date, "%A %d %B %Y %H:%M:%S"
+                    )
                 except ValueError:
                     try:
-                        locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
-                        last_scan_date = datetime.strptime(creation_date, "%A %d %B %Y %H:%M:%S")
+                        last_scan_date = datetime.strptime(
+                            creation_date, "%A, %d %B %Y %H:%M:%S"
+                        )
                     except ValueError:
-                        print(f"Error: Unable to parse the date '{creation_date}'")
-                        sys.exit(1)
-                    finally:
-                        locale.setlocale(locale.LC_TIME, '')
+                        try:
+                            locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
+                            last_scan_date = datetime.strptime(
+                                creation_date, "%A %d %B %Y %H:%M:%S"
+                            )
+                        except ValueError:
+                            try:
+                                last_scan_date = datetime.strptime(
+                                    creation_date, "%A, %d %B %Y %H:%M:%S"
+                                )
+                            except ValueError:
+                                print(
+                                    f"Error: Unable to parse the date '{creation_date}'"
+                                )
+                                sys.exit(1)
+                        finally:
+                            locale.setlocale(locale.LC_TIME, "")
             current_date = datetime.now()
             time_difference = current_date - last_scan_date
 
             if time_difference.days > 7:
-                print(f"Last scan was more than 7 days ago.")
+                print("Last scan was more than 7 days ago.")
                 print(f"Last scan: {last_scan_date.strftime('%d.%m.%Y %H:%M:%S')}")
                 print(f"Days since last scan: {time_difference.days}")
                 sys.exit(2)

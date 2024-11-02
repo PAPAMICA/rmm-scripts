@@ -2,25 +2,30 @@
 
 import subprocess
 import sys
-import re
 from datetime import datetime, timedelta
+
 
 def run_acronis_command(command):
     """Executes an Acronis command by specifying the full path to acrocmd."""
-    full_command = f'"C:\\Program Files\\BackupClient\\CommandLineTool\\acrocmd.exe" {command}'
-    
+    full_command = (
+        f'"C:\\Program Files\\BackupClient\\CommandLineTool\\acrocmd.exe" {command}'
+    )
+
     try:
-        result = subprocess.run(full_command, capture_output=True, text=True, shell=True, check=True)
+        result = subprocess.run(
+            full_command, capture_output=True, text=True, check=True
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         print(f"Error executing Acronis command: {e}")
         print(f"Error output: {e.stderr}")
         return None
 
+
 def extract_backup_info(output):
     """Extracts the plan name, status, and date of the last backup from the raw format."""
-    parts = output.split('\t')
-    
+    parts = output.split("\t")
+
     if len(parts) < 4:
         print("Unable to extract backup information.")
         sys.exit(1)
@@ -30,6 +35,7 @@ def extract_backup_info(output):
     last_date = parts[3]
 
     return plan_name, last_status, last_date
+
 
 def get_last_backup_status():
     """Checks the status of the last Acronis backup plan."""
@@ -75,6 +81,7 @@ def get_last_backup_status():
         return 1
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(get_last_backup_status())
