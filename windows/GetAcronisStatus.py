@@ -235,6 +235,68 @@ def get_last_completed_backup():
     return None, None
 
 
+def get_last_successful_backup():
+    """Gets the last successful backup activity and returns the date.
+    Filters by activity name 'Sauvegarder' or 'Backup' with Result='Succeeded'."""
+    command = "list activities --filter_state=completed --output=raw"
+    output = run_acronis_command(command)
+
+    if output is None:
+        return None
+
+    if not output.strip():
+        return None
+
+    # Parse the output
+    lines = output.splitlines()
+    date_formats = ["%d.%m.%Y %H:%M:%S", "%d/%m/%Y %H:%M:%S"]
+    
+    # Store all successful backup activities
+    successful_backups = []
+    
+    for line in lines:
+        if not line.strip():
+            continue
+        
+        parts = line.split("\t")
+        
+        if len(parts) < 10:
+            continue
+            
+        activity_name = parts[0].strip()
+        if activity_name.lower() not in ["sauvegarder", "backup"]:
+            continue
+        
+        # Column 9: Result (status) - filter for "Succeeded"
+        result_status = parts[9].strip() if len(parts) > 9 else ""
+        if result_status.lower() != "succeeded":
+            continue
+        
+        # Column 4: Start Time (date)
+        if len(parts) > 4:
+            start_time_str = parts[4].strip()
+            start_date = None
+            
+            for date_format in date_formats:
+                try:
+                    start_date = datetime.strptime(start_time_str, date_format)
+                    now = datetime.now()
+                    if start_date <= now and (now - start_date).days < 365:
+                        break
+                except ValueError:
+                    continue
+            
+            if start_date:
+                successful_backups.append((start_time_str, start_date))
+    
+    # Return the most recent successful backup
+    if successful_backups:
+        successful_backups.sort(key=lambda x: x[1], reverse=True)
+        return successful_backups[0][0]
+    
+    return None
+
+
 def get_last_backup_status():
     """Checks the status of the last Acronis backup plan."""
     
@@ -288,11 +350,30 @@ def get_last_backup_status():
         print(f"Backup {last_status}")
     print(f"Plan: [{plan_status}] {plan_name}")
 
+    # If backup failed, show last successful backup
     if last_status and last_status.lower() in ["error", "failed"]:
-        if last_date:
-            print(f"The last backup is in error ({last_date})")
+        last_successful_date = get_last_successful_backup()
+        if last_successful_date:
+            # Calculate days since last successful backup
+            date_formats = ["%d.%m.%Y %H:%M:%S", "%d/%m/%Y %H:%M:%S"]
+            parsed_date = None
+            for date_format in date_formats:
+                try:
+                    parsed_date = datetime.strptime(last_successful_date, date_format)
+                    break
+                except ValueError:
+                    continue
+            
+            if parsed_date:
+                days_ago = (datetime.now() - parsed_date).days
+                if days_ago == 0:
+                    print("Last successful backup today")
+                elif days_ago == 1:
+                    print("Last successful backup 1 day ago")
+                else:
+                    print(f"Last successful backup {days_ago} days ago")
         else:
-            print("The last backup is in error")
+            print("Last successful backup: None")
         return 1
 
     if last_date is None:
